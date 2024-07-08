@@ -1,0 +1,26 @@
+[project]
+name = "maxvolpy"
+version = "0.3.8"
+description = "Cross and skeleton approximations, based on maximum volume submatrices."
+readme = "README.rst"
+license.file = "LICENSE.txt"
+authors = [{"name" = "Alexander Mikhalev", email = "muxasizhevsk@gmail.com"}]
+maintainers = [{"name" = "Alexander Mikhalev", email = "muxasizhevsk@gmail.com"}]
+
+dependencies = [
+    "numpy~=2.0",
+    "scipy~=1.14",
+]
+
+[project.urls]
+"Homepage" = "http://pythonhosted.org/maxvolpy/"
+"Source" = "https://bitbucket.org/muxas/maxvolpy"
+
+[build-system]
+requires = [
+    "cython~=3.0",
+    "numpy~=2.0",
+    "scipy~=1.14",
+    "setuptools",
+]
+build-backend = "setuptools.build_meta"

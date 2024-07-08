@@ -1,37 +1,25 @@
-#!/usr/bin/env python
-"""
-Cross and skeleton approximations, based on maximum volume submatrices.
-"""
-
-DOCLINES = (__doc__ or '').split("\n")
+from pathlib import Path
+import subprocess
+import sys
 
 from setuptools import setup
 from setuptools.extension import Extension
-from Cython.Build import cythonize
-import numpy
+import numpy as np
 
 
-extensions = [
-    Extension("maxvolpy._maxvol",
-             ["maxvolpy/_maxvol.pyx"],
-        include_dirs = [numpy.get_include()],
-        extra_compile_args=['-O3', '-march=native', '-ffast-math']
-    )
-]
+maxvol_pyx = Path(__file__).parent.joinpath('maxvolpy', '_maxvol.pyx')
+maxvol_pyx_src = maxvol_pyx.with_suffix(maxvol_pyx.suffix + '.src')
+
+if not maxvol_pyx.is_file() or maxvol_pyx_src.stat().st_mtime > maxvol_pyx.stat().st_mtime:
+    subprocess.call([sys.executable, maxvol_pyx_src], cwd=maxvol_pyx_src.parent)
 
 setup(
-    name = 'maxvolpy',
-    version = '0.3.8',
-    maintainer = "Alexander Mikhalev",
-    maintainer_email = "muxasizhevsk@gmail.com",
-    description = DOCLINES[1],
-    long_description = DOCLINES[1],
-    url = "https://bitbucket.org/muxas/maxvolpy",
-    author = "Alexander Mikhalev",
-    author_email = "muxasizhevsk@gmail.com",
-    license = 'MIT',
-    install_requires = ['numpy>=1.10.1', 'scipy>=0.16.0', 'cython>=0.23.4'],
-    setup_requires   = ['numpy>=1.10.1', 'cython>=0.23.4'],
-    packages = ['maxvolpy'],
-    ext_modules = cythonize(extensions),
+    ext_modules=[
+        Extension(
+            'maxvolpy._maxvol',
+            ['maxvolpy/_maxvol.pyx'],
+            include_dirs=[np.get_include()],
+            extra_compile_args=['-O3', '-march=native', '-ffast-math'],
+        ),
+    ],
 )
