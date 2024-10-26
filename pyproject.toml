@@ -8,7 +8,7 @@ authors = [{"name" = "Alexander Mikhalev", email = "muxasizhevsk@gmail.com"}]
 maintainers = [{"name" = "Alexander Mikhalev", email = "muxasizhevsk@gmail.com"}]
 
 dependencies = [
-    "numpy~=1.0",
+    "numpy~=2.0",
     "scipy~=1.14",
 ]
 
@@ -19,7 +19,7 @@ dependencies = [
 [build-system]
 requires = [
     "cython~=3.0",
-    "numpy~=1.0",
+    "numpy~=2.0",
     "scipy~=1.14",
     "setuptools",
 ]
