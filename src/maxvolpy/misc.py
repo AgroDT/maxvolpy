@@ -14,7 +14,7 @@ import numpy as np
 def svd_cut(A, tol, alpha=0., norm=2):
     """
     Computes SVD and cuts low singular values.
-    
+
     Computes singular values decomposition of matrix `A`, adds
     regularizing parameter `alpha` to each singular value and returns
     only largest singular values and vectors with relative tolerance

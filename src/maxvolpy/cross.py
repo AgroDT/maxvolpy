@@ -35,7 +35,7 @@ def py_lu_partial_fixed(A, rank):
             if len(P) == 1:
                 break
             P.pop(index_in_P)
-            
+
         else:
             U[:,i] = A[:,maxj]-U[:,:i].dot(V[:i,maxj])
             V[i] = B/max_val

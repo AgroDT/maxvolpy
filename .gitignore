@@ -1,6 +1,7 @@
 .venv
 *.pyc
-maxvolpy/_maxvol.c
-maxvolpy.egg-info
+src/maxvolpy/_maxvol.c
+*.egg-info
+*.so
 build
 docs/build

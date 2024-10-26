@@ -7,22 +7,18 @@ this properties are 1-volume and 2-volume with the following formulas:
     \\sqrt{\\max(\\det(A^HA), \\det(AA^H))}`
 """
 
-from __future__ import absolute_import, division, print_function
-
 __all__ = ['rect_maxvol', 'maxvol', 'rect_maxvol_svd', 'maxvol_svd',
     'rect_maxvol_qr', 'maxvol_qr']
 
+import numpy as np
+from scipy.linalg import get_lapack_funcs, get_blas_funcs
+
 from .misc import svd_cut
 
-def py_rect_maxvol(A, tol=1., maxK=None, min_add_K=None, minK=None,
+def rect_maxvol(A, tol=1., maxK=None, min_add_K=None, minK=None,
         start_maxvol_iters=10, identity_submatrix=True, top_k_index=-1):
-    """
-    Python implementation of rectangular 2-volume maximization.
+    """Python implementation of rectangular 2-volume maximization."""
 
-    See Also
-    --------
-    rect_maxvol
-    """
     # tol2 - square of parameter tol
     tol2 = tol**2
     # N - number of rows, r - number of columns of matrix A
@@ -39,7 +35,7 @@ def py_rect_maxvol(A, tol=1., maxK=None, min_add_K=None, minK=None,
     if minK > N:
         minK = N
     if min_add_K is not None:
-        minK = max(minK, r + min_add_K) 
+        minK = max(minK, r + min_add_K)
     if minK > maxK:
         minK = maxK
         #raise ValueError('minK value cannot be greater than maxK value')
@@ -51,7 +47,7 @@ def py_rect_maxvol(A, tol=1., maxK=None, min_add_K=None, minK=None,
     # algorithm
     index = np.zeros(N, dtype=np.int32)
     chosen = np.ones(top_k_index)
-    tmp_index, C = py_maxvol(A, 1.05, start_maxvol_iters, top_k_index)
+    tmp_index, C = maxvol(A, 1.05, start_maxvol_iters, top_k_index)
     index[:r] = tmp_index
     chosen[tmp_index] = 0
     C = np.asfortranarray(C)
@@ -89,14 +85,9 @@ def py_rect_maxvol(A, tol=1., maxK=None, min_add_K=None, minK=None,
         C[index[:K]] = np.eye(K, dtype=C.dtype)
     return index[:K].copy(), C
 
-def py_maxvol(A, tol=1.05, max_iters=100, top_k_index=-1):
-    """
-    Python implementation of 1-volume maximization.
+def maxvol(A, tol=1.05, max_iters=100, top_k_index=-1):
+    """Python implementation of 1-volume maximization."""
 
-    See Also
-    --------
-    maxvol
-    """
     # some work on parameters
     if tol < 1:
         tol = 1.0
@@ -147,143 +138,6 @@ def py_maxvol(A, tol=1.05, max_iters=100, top_k_index=-1):
         iters += 1
         i, j = divmod(abs(C[:,:top_k_index]).argmax(), top_k_index)
     return index[:r].copy(), C.T
-
-def rect_maxvol(A, tol=1., maxK=None, min_add_K=None, minK=None,
-        start_maxvol_iters=10, identity_submatrix=True, top_k_index=-1):
-    """
-    Finds good rectangular submatrix.
-
-    Uses greedy iterative maximization of 2-volume to find good
-    `K`-by-`r` submatrix in a given `N`-by-`r` matrix `A` of rank `r`.
-    Returns good submatrix and least squares coefficients of expansion
-    (`N`-by-`K` matrix) of rows of matrix `A` by rows of good submatrix.
-
-    Parameters
-    ----------
-    A : numpy.ndarray(ndim=2)
-        Real or complex matrix of shape `(N, r)`, `N >= r`.
-    tol : float, optional
-        Upper bound for euclidian norm of coefficients of expansion of
-        rows of `A` by rows of good submatrix. Defaults to `1.0`.
-    maxK : integer, optional
-        Maximum number of rows in good submatrix. Defaults to `N` if
-        not set explicitly.
-    minK : integer, optional
-        Minimum number of rows in good submatrix. Defaults to `r` if
-        not set explicitly.
-    min_add_K : integer, optional
-        Minimum number of rows to add to the square submatrix.
-        Resulting good matrix will have minimum of `r+min_add_K` rows.
-        Ignored if not set explicitly.
-    start_maxvol_iters : integer, optional
-        How many iterations of square maxvol (optimization of 1-volume)
-        is required to be done before actual rectangular 2-volume
-        maximization. Defaults to `10`.
-    identity_submatrix : boolean, optional
-        Coefficients of expansions are computed as least squares
-        solution. If `identity_submatrix` is True, returned matrix of
-        coefficients will have submatrix, corresponding to good rows,
-        set to identity. Defaults to `True`.
-    top_k_index : integer, optional
-        Pivot rows for good submatrix will be in range from `0` to
-        `(top_k_index-1)`. This restriction is ignored, if `top_k_index`
-        is -1. Defaults to `-1`.
-
-    Returns
-    -------
-    piv : numpy.ndarray(ndim=1, dtype=numpy.int32)
-        Rows of matrix `A`, corresponding to submatrix, good in terms
-        of 2-volume. Shape is `(K, )`.
-    C : numpy.ndarray(ndim=2)
-        Matrix of coefficients of expansions of all rows of `A` by good
-        rows `piv`. Shape is `(N, K)`.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from maxvolpy.maxvol import rect_maxvol
-    >>> np.random.seed(100)
-    >>> a = np.random.rand(1000, 30, 2).view(dtype=np.complex128)[:,:,0]
-    >>> piv, C = rect_maxvol(a, 1.0)
-    >>> np.allclose(a, C.dot(a[piv]))
-    True
-    >>> print('maximum euclidian norm of row in matrix C: {:.5f}'.
-    ... format(max([np.linalg.norm(C[i], 2) for i in range(1000)])))
-    maximum euclidian norm of row in matrix C: 1.00000
-    >>> piv, C = rect_maxvol(a, 1.5)
-    >>> np.allclose(a, C.dot(a[piv]))
-    True
-    >>> print('maximum euclidian norm of row in matrix C: {:.5f}'.
-    ... format(max([np.linalg.norm(C[i], 2) for i in range(1000)])))
-    maximum euclidian norm of row in matrix C: 1.49193
-    >>> piv, C = rect_maxvol(a, 2.0)
-    >>> np.allclose(a, C.dot(a[piv]))
-    True
-    >>> print('maximum euclidian norm of row in matrix C: {:.5f}'.
-    ... format(max([np.linalg.norm(C[i], 2) for i in range(1000)])))
-    maximum euclidian norm of row in matrix C: 1.91954
-    """
-    return rect_maxvol_func(A, tol, maxK, min_add_K, minK, start_maxvol_iters,
-            identity_submatrix, top_k_index)
-
-def maxvol(A, tol=1.05, max_iters=100, top_k_index=-1):
-    """
-    Finds good square submatrix.
-
-    Uses greedy iterative maximization of 1-volume to find good
-    `r`-by-`r` submatrix in a given `N`-by-`r` matrix `A` of rank `r`.
-    Returns good submatrix and coefficients of expansion
-    (`N`-by-`r` matrix) of rows of matrix `A` by rows of good submatrix.
-
-    Parameters
-    ----------
-    A : numpy.ndarray(ndim=2)
-        Real or complex matrix of shape `(N, r)`, `N >= r`.
-    tol : float, optional
-        Upper bound for infinite norm of coefficients of expansion of
-        rows of `A` by rows of good submatrix. Minimum value is 1.
-        Default to `1.05`.
-    max_iters : integer, optional
-        Maximum number of iterations. Each iteration swaps 2 rows.
-        Defaults to `100`.
-    top_k_index : integer, optional
-        Pivot rows for good submatrix will be in range from `0` to
-        `(top_k_index-1)`. This restriction is ignored, if `top_k_index`
-        is -1. Defaults to `-1`.
-    
-    Returns
-    -------
-    piv : numpy.ndarray(ndim=1, dtype=numpy.int32)
-        Rows of matrix `A`, corresponding to submatrix, good in terms
-        of 1-volume. Shape is `(r, )`.
-    C : numpy.ndarray(ndim=2)
-        Matrix of coefficients of expansions of all rows of `A` by good
-        rows `piv`. Shape is `(N, r)`.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from maxvolpy.maxvol import maxvol
-    >>> np.random.seed(100)
-    >>> a = np.random.rand(1000, 30, 2).view(dtype=np.complex128)[:,:,0]
-    >>> piv, C = maxvol(a, 1.0)
-    >>> np.allclose(a, C.dot(a[piv]))
-    True
-    >>> print('Chebyshev norm of matrix C: {:.5f}'.format(abs(C).max()))
-    Chebyshev norm of matrix C: 1.00000
-    >>> piv, C = maxvol(a, 1.05)
-    >>> np.allclose(a, C.dot(a[piv]))
-    True
-    >>> print('Chebyshev norm of matrix C: {:.5f}'.format(abs(C).max()))
-    Chebyshev norm of matrix C: 1.04641
-    >>> piv, C = maxvol(a, 1.10)
-    >>> np.allclose(a, C.dot(a[piv]))
-    True
-    >>> print('Chebyshev norm of matrix C: {:.5f}'.format(abs(C).max()))
-    Chebyshev norm of matrix C: 1.07854
-    """
-    return maxvol_func(A, tol=tol, max_iters=max_iters,
-            top_k_index=top_k_index)
 
 def rect_maxvol_svd(A, svd_tol=1e-3, svd_alpha=0., tol=1., maxK=None,
         min_add_K=None, minK=None, start_maxvol_iters=10,
@@ -625,7 +479,7 @@ def maxvol_qr(A, tol=1.05, max_iters=100, top_k_index=-1):
         Pivot rows for good submatrix will be in range from `0` to
         `(top_k_index-1)`. This restriction is ignored, if `top_k_index`
         is -1.
-    
+
     Returns
     -------
     piv : numpy.ndarray(ndim=1, dtype=numpy.int32)
@@ -662,17 +516,3 @@ def maxvol_qr(A, tol=1.05, max_iters=100, top_k_index=-1):
         return np.arange(N, dtype=np.int32), np.eye(N, dtype=A.dtype)
     Q = np.linalg.qr(A)[0]
     return maxvol(Q, tol, max_iters, top_k_index)
-
-import numpy as np
-
-try:
-    from ._maxvol import c_rect_maxvol, c_maxvol
-    rect_maxvol_func = c_rect_maxvol
-    maxvol_func = c_maxvol
-    __all__.extend(['c_rect_maxvol', 'c_maxvol'])
-except:
-    from scipy.linalg import solve_triangular, get_lapack_funcs, get_blas_funcs
-    print("warning: fast C maxvol functions are not compiled, continue with"
-            " python maxvol functions")
-    rect_maxvol_func = py_rect_maxvol
-    maxvol_func = py_maxvol

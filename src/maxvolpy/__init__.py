@@ -8,9 +8,20 @@ approximations are presented in `maxvol` submodule. What does good
 submatrix mean is noted in documentation for `maxvol` submodule.
 """
 
-from __future__ import absolute_import
+from __future__ import annotations
 
-__all__ = ['maxvol']
+__all__ = ['__version__', 'rect_maxvol', 'maxvol']
 
-from . import maxvol
 from .__version__ import __version__
+
+try:
+    from ._maxvol import rect_maxvol, maxvol
+except ImportError:
+    import warnings
+
+    warnings.warn(
+        'fast C maxvol functions are not compiled,'
+        ' continue with python maxvol functions',
+        RuntimeWarning,
+    )
+    from .maxvol import rect_maxvol, maxvol
