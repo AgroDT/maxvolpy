@@ -2,20 +2,31 @@ import os
 
 from setuptools import setup
 from setuptools.extension import Extension
+from setuptools.command.build_ext import build_ext
 import numpy as np
 
 
-if os.name != 'nt' and os.getenv('MAXVOLPY_CYTHON', '1').lower() in {'1', 'true', 'yes', 'on'}:
-    ext_modules = [
+class BuildExt(build_ext):
+    def build_extension(self, ext) -> None:
+        if self.compiler.compiler_type != 'msvc':
+            ext.extra_compile_args.extend(('-O3', '-march=native', '-ffast-math'))
+        return super().build_extension(ext)
+
+
+def get_ext_modules():
+    if os.getenv('MAXVOLPY_CYTHON', '1').lower() not in {'1', 'true', 'yes', 'on'}:
+        return None
+    return [
         Extension(
             'maxvolpy._maxvol',
             ['src/maxvolpy/_maxvol.pyx'],
             include_dirs=[np.get_include()],
-            extra_compile_args=['-O3', '-march=native', '-ffast-math', '-DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION']
+            define_macros=[('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')],
         ),
     ]
-else:
-    ext_modules = None
 
 
-setup(ext_modules=ext_modules)
+setup(
+    cmdclass={'build_ext': BuildExt},
+    ext_modules=get_ext_modules(),
+)

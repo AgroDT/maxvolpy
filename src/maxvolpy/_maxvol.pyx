@@ -18,14 +18,6 @@ from scipy.linalg.cython_lapack cimport (
     sgetrf, dgetrf, cgetrf, zgetrf
 )
 
-cdef extern from "complex.h" nogil:
-    double cabs(double complex)
-    float cabsf(float complex)
-
-cdef extern from "math.h" nogil:
-    double fabs(double)
-    float fabsf(float)
-
 def rect_maxvol(A, tol=1., maxK=None, min_add_K=None, minK=None,
         start_maxvol_iters=10, identity_submatrix=True, top_k_index=-1):
     """Cython implementation of rectangular 2-volume maximization."""
@@ -141,7 +133,7 @@ cdef object srect_maxvol(int N, int R, float *lu, float tol, int minK,
     for i in range(R):
         tmp_pointer = coef+i*N
         for j in prange(top_k_index, schedule="static", nogil=True):
-            tmp = fabsf(tmp_pointer[j])
+            tmp = abs(tmp_pointer[j])
             L[j] += tmp*tmp
     for i in prange(R, schedule="static", nogil=True):
         L[basis[i]] = 0.0
@@ -167,7 +159,7 @@ cdef object srect_maxvol(int N, int R, float *lu, float tol, int minK,
         for j in prange(N, schedule="static", nogil=True):
             tmp_pointer[j] = tmp*V[j]
         for j in prange(top_k_index, schedule="static", nogil=True):
-            tmp2 = fabsf(V[j])
+            tmp2 = abs(V[j])
             L[j] -= tmp2*tmp2*tmp
             L[j] *= chosen[j]
         i = isamax(&top_k_index, L, &i_one)-1
@@ -236,7 +228,7 @@ cdef object smaxvol(int N, int R, float *lu, float *coef, int *basis,
         abs_max = -1
         for k_row in range(top_k_index):
             for k_col in range(R):
-                tmp = fabsf(coef[k_row+k_col*N])
+                tmp = abs(coef[k_row+k_col*N])
                 if tmp > abs_max:
                     abs_max = tmp
                     j = k_row
@@ -289,7 +281,7 @@ cdef object drect_maxvol(int N, int R, double *lu, double tol, int minK,
     for i in range(R):
         tmp_pointer = coef+i*N
         for j in prange(top_k_index, schedule="static", nogil=True):
-            tmp = fabs(tmp_pointer[j])
+            tmp = abs(tmp_pointer[j])
             L[j] += tmp*tmp
     for i in prange(R, schedule="static", nogil=True):
         L[basis[i]] = 0.0
@@ -315,7 +307,7 @@ cdef object drect_maxvol(int N, int R, double *lu, double tol, int minK,
         for j in prange(N, schedule="static", nogil=True):
             tmp_pointer[j] = tmp*V[j]
         for j in prange(top_k_index, schedule="static", nogil=True):
-            tmp2 = fabs(V[j])
+            tmp2 = abs(V[j])
             L[j] -= tmp2*tmp2*tmp
             L[j] *= chosen[j]
         i = idamax(&top_k_index, L, &i_one)-1
@@ -384,7 +376,7 @@ cdef object dmaxvol(int N, int R, double *lu, double *coef, int *basis,
         abs_max = -1
         for k_row in range(top_k_index):
             for k_col in range(R):
-                tmp = fabs(coef[k_row+k_col*N])
+                tmp = abs(coef[k_row+k_col*N])
                 if tmp > abs_max:
                     abs_max = tmp
                     j = k_row
@@ -437,7 +429,7 @@ cdef object crect_maxvol(int N, int R, float complex *lu, float tol, int minK,
     for i in range(R):
         tmp_pointer = coef+i*N
         for j in prange(top_k_index, schedule="static", nogil=True):
-            tmp = cabsf(tmp_pointer[j])
+            tmp = abs(tmp_pointer[j])
             L[j] += tmp*tmp
     for i in prange(R, schedule="static", nogil=True):
         L[basis[i]] = 0.0
@@ -463,7 +455,7 @@ cdef object crect_maxvol(int N, int R, float complex *lu, float tol, int minK,
         for j in prange(N, schedule="static", nogil=True):
             tmp_pointer[j] = tmp*V[j]
         for j in prange(top_k_index, schedule="static", nogil=True):
-            tmp2 = cabsf(V[j])
+            tmp2 = abs(V[j])
             L[j] -= tmp2*tmp2*tmp
             L[j] *= chosen[j]
         i = isamax(&top_k_index, L, &i_one)-1
@@ -532,7 +524,7 @@ cdef object cmaxvol(int N, int R, float complex *lu, float complex *coef, int *b
         abs_max = -1
         for k_row in range(top_k_index):
             for k_col in range(R):
-                tmp = cabsf(coef[k_row+k_col*N])
+                tmp = abs(coef[k_row+k_col*N])
                 if tmp > abs_max:
                     abs_max = tmp
                     j = k_row
@@ -585,7 +577,7 @@ cdef object zrect_maxvol(int N, int R, double complex *lu, double tol, int minK,
     for i in range(R):
         tmp_pointer = coef+i*N
         for j in prange(top_k_index, schedule="static", nogil=True):
-            tmp = cabs(tmp_pointer[j])
+            tmp = abs(tmp_pointer[j])
             L[j] += tmp*tmp
     for i in prange(R, schedule="static", nogil=True):
         L[basis[i]] = 0.0
@@ -611,7 +603,7 @@ cdef object zrect_maxvol(int N, int R, double complex *lu, double tol, int minK,
         for j in prange(N, schedule="static", nogil=True):
             tmp_pointer[j] = tmp*V[j]
         for j in prange(top_k_index, schedule="static", nogil=True):
-            tmp2 = cabs(V[j])
+            tmp2 = abs(V[j])
             L[j] -= tmp2*tmp2*tmp
             L[j] *= chosen[j]
         i = idamax(&top_k_index, L, &i_one)-1
@@ -680,7 +672,7 @@ cdef object zmaxvol(int N, int R, double complex *lu, double complex *coef, int 
         abs_max = -1
         for k_row in range(top_k_index):
             for k_col in range(R):
-                tmp = cabs(coef[k_row+k_col*N])
+                tmp = abs(coef[k_row+k_col*N])
                 if tmp > abs_max:
                     abs_max = tmp
                     j = k_row
