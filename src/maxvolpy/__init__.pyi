@@ -1,15 +1,20 @@
+from typing import TypeAlias, TypeVar
+
 import numpy as np
 
-def rect_maxvol[T](
-    A: np.ndarray[tuple[int, int], T],
-    tol: float = 1.0,
+_T = TypeVar('_T', np.dtype[np.float32], np.dtype[np.float64], np.dtype[np.complex64], np.dtype[np.complex128])
+_Result: TypeAlias = tuple[np.ndarray[tuple[int], np.dtype[np.int32]], np.ndarray[tuple[int, int], _T]]
+
+def rect_maxvol(
+    A: np.ndarray[tuple[int, int], _T],
+    tol: float | None = 1.0,
     maxK: int | None = None,
     min_add_K: int | None = None,
     minK: int | None = None,
-    start_maxvol_iters: int = 10,
-    identity_submatrix: bool = True,
-    top_k_index: int = -1,
-) -> tuple[np.ndarray[tuple[int], np.int32], np.ndarray[tuple[int, int], T]]:
+    start_maxvol_iters: int | None = 10,
+    identity_submatrix: bool | None = True,
+    top_k_index: int | None = -1,
+) -> _Result[_T]:
     """
     Finds good rectangular submatrix.
 
@@ -84,12 +89,12 @@ def rect_maxvol[T](
     maximum euclidian norm of row in matrix C: 1.91954
     """
 
-def maxvol[T](
-    A: np.ndarray[tuple[int, int], T],
-    tol: float = 1.0,
-    max_iters: int = 100,
-    top_k_index: int = -1,
-) -> tuple[np.ndarray[tuple[int], np.int32], np.ndarray[tuple[int, int], T]]:
+def maxvol(
+    A: np.ndarray[tuple[int, int], _T],
+    tol: float | None = 1.0,
+    max_iters: int | None = 100,
+    top_k_index: int | None = -1,
+) -> _Result[_T]:
     """
     Finds good square submatrix.
 
