@@ -1,6 +1,6 @@
 [project]
 name = "maxvolpy"
-version = "0.3.8"
+version = "0.4.0"
 description = "Cross and skeleton approximations, based on maximum volume submatrices."
 readme = "README.rst"
 license.file = "LICENSE.txt"
